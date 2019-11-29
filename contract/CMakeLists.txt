@@ -5,7 +5,7 @@ project(contract)
 set(EOSIO_WASM_OLD_BEHAVIOR "Off")
 find_package(eosio.cdt)
 
-add_contract(guardian.reward guardian.reward src/guardian.reward.cpp)
+add_contract(guardian.reward guardian.reward ${CMAKE_CURRENT_SOURCE_DIR}/src/guardian.reward.cpp)
 
 target_include_directories(guardian.reward
         PUBLIC
