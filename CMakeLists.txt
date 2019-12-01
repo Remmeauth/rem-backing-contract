@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(remme_guardian_reward_contract)
+project(rem.backing)
 
 include(ExternalProject)
 
 find_package(eosio.cdt)
+
+message(STATUS "Building rem_backing_contract v${VERSION_FULL}")
 
 set(EOSIO_CDT_VERSION_MIN "1.7")
 set(EOSIO_CDT_VERSION_SOFT_MAX "1.7")
@@ -32,9 +34,9 @@ else()
 endif()
 
 ExternalProject_Add(
-        remme_guardian_reward_contract
-        SOURCE_DIR ${CMAKE_SOURCE_DIR}/contract
-        BINARY_DIR ${CMAKE_BINARY_DIR}/contract
+        rem.backing
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}/rem.backing/
+        BINARY_DIR ${CMAKE_BINARY_DIR}/rem.backing/
         CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=${EOSIO_CDT_ROOT}/lib/cmake/eosio.cdt/EosioWasmToolchain.cmake
         UPDATE_COMMAND ""
         PATCH_COMMAND ""
