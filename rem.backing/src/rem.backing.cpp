@@ -6,7 +6,7 @@ namespace eosio {
    :contract(receiver, code, ds),
     rewards_dist_tbl(get_self(), get_self().value)
     {
-      rewards_dist = rewards_dist_tbl.exists() ? rewards_dist_tbl.get() : rewardsdata{};
+      rewards_dist = rewards_dist_tbl.exists() ? rewards_dist_tbl.get() : rewarddist{};
     }
 
    void backing::distrewards()
@@ -27,9 +27,10 @@ namespace eosio {
       require_auth( get_self() );
 
       for (size_t i = 0; i < accounts.size(); ++i) {
+         print(accounts.at(i).to_string());
          rewards_dist.reward_distribution[accounts.at(i)] = reward_pct.at(i);
       }
-   rewards_dist_tbl.set(rewards_dist, same_payer);
+   rewards_dist_tbl.set(rewards_dist, get_self());
    }
 
    void backing::removeacc(const name &account)
