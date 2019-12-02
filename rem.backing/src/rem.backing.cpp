@@ -13,6 +13,7 @@ namespace eosio {
    {
       claim_rewards( get_self() );
       asset contract_balance = get_balance(token_account, get_self(), core_symbol);
+      check_rewards_dist_sum();
 
       for (const auto &guardian: rewards_dist.reward_distribution) {
          asset quantity = { static_cast<int64_t>(contract_balance.amount * guardian.second), core_symbol };
@@ -27,10 +28,10 @@ namespace eosio {
       require_auth( get_self() );
 
       for (size_t i = 0; i < accounts.size(); ++i) {
-         print(accounts.at(i).to_string());
          rewards_dist.reward_distribution[accounts.at(i)] = reward_pct.at(i);
       }
-   rewards_dist_tbl.set(rewards_dist, get_self());
+      check_rewards_dist_sum();
+      rewards_dist_tbl.set(rewards_dist, get_self());
    }
 
    void backing::removeacc(const name &account)
@@ -42,6 +43,15 @@ namespace eosio {
 
       rewards_dist.reward_distribution.erase(account);
       rewards_dist_tbl.set(rewards_dist, same_payer);
+   }
+
+   void backing::check_rewards_dist_sum() {
+      const auto dist_sum = std::accumulate(
+         std::begin(rewards_dist.reward_distribution), std::end(rewards_dist.reward_distribution), 0.0,
+                    [](const auto previous, const auto& element)
+                    { return previous + element.second; }
+      );
+      check(dist_sum == 1, "the sum of the reward distribution should be a 1");
    }
 
    void backing::claim_rewards(const name &owner)

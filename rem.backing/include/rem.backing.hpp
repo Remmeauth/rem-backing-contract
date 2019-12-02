@@ -4,6 +4,8 @@
 #include <eosio/singleton.hpp>
 #include <eosio/eosio.hpp>
 
+#include <numeric>
+
 namespace eosio {
 
    class [[eosio::contract("rem.backing")]] backing : public contract {
@@ -79,6 +81,7 @@ namespace eosio {
       rewards_idx  rewards_dist_tbl;
       rewarddist rewards_dist;
 
+      void check_rewards_dist_sum();
       void claim_rewards(const name &owner);
       void delegatebw(const name& from, const name& receiver, const asset& stake_quantity, bool transfer);
    };
