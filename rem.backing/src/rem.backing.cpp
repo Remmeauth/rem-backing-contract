@@ -6,15 +6,13 @@ namespace eosio {
    :contract(receiver, code, ds),
     rewards_dist_tbl(get_self(), get_self().value)
     {
-      rewards_dist = rewards_dist_tbl.exists() ? rewards_dist_tbl.get() : rewards_data{};
+      rewards_dist = rewards_dist_tbl.exists() ? rewards_dist_tbl.get() : rewardsdata{};
     }
 
    void backing::distrewards()
    {
       claim_rewards( get_self() );
-
       asset contract_balance = get_balance(token_account, get_self(), core_symbol);
-      check(contract_balance.amount > 0, "contract balance should be a positive");
 
       for (const auto &guardian: rewards_dist.reward_distribution) {
          asset quantity = { static_cast<int64_t>(contract_balance.amount * guardian.second), core_symbol };
