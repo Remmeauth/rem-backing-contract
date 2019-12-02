@@ -59,11 +59,11 @@ namespace eosio {
       static constexpr name   token_account  = "rem.token"_n;
       static constexpr symbol core_symbol    = symbol(symbol_code("REM"), 4);
 
-      struct [[eosio::table]] rewards_data {
+      struct [[eosio::table]] rewardsdata {
          std::map<name, double> reward_distribution;
 
          // explicit serialization macro is not necessary, used here only to improve compilation time
-         EOSLIB_SERIALIZE( rewards_data, (reward_distribution))
+         EOSLIB_SERIALIZE( rewardsdata, (reward_distribution))
       };
 
       struct [[eosio::table]] account {
@@ -74,10 +74,10 @@ namespace eosio {
       };
 
       typedef eosio::multi_index< "accounts"_n,  account >  accounts;
-      typedef singleton< "rewarddist"_n,  rewards_data >    rewards_idx;
+      typedef singleton< "rewarddist"_n,  rewardsdata >    rewards_idx;
 
       rewards_idx  rewards_dist_tbl;
-      rewards_data rewards_dist;
+      rewardsdata rewards_dist;
 
       void claim_rewards(const name &owner);
       void delegatebw(const name& from, const name& receiver, const asset& stake_quantity, bool transfer);
