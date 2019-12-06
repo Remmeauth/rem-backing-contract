@@ -51,7 +51,7 @@ namespace eosio {
                     [](const auto previous, const auto& element)
                     { return previous + element.second; }
       );
-      check(dist_sum >= 0.9999 && dist_sum <= 1.0001, "the sum of the reward distribution should be a 1");
+      check(dist_sum >= 0.9999 && dist_sum <= 1.0001, "the sum of the reward distribution should be a 1(+-0.0001");
    }
 
    void backing::claim_rewards(const name &owner)
