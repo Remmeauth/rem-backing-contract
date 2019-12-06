@@ -17,7 +17,7 @@ namespace eosio {
 
       for (const auto &guardian: rewards_dist.reward_distribution) {
          asset quantity = { static_cast<int64_t>(contract_balance.amount * guardian.second), core_symbol };
-         if (quantity.amount > 0) {
+         if (quantity.amount > 1) {    // 0.0001 REM
             delegatebw(get_self(), guardian.first, quantity, true);
          }
       }
@@ -51,7 +51,7 @@ namespace eosio {
                     [](const auto previous, const auto& element)
                     { return previous + element.second; }
       );
-      check(dist_sum == 1, "the sum of the reward distribution should be a 1");
+      check(dist_sum >= 0.9999 && dist_sum <= 1.0001, "the sum of the reward distribution should be a 1(+-0.0001");
    }
 
    void backing::claim_rewards(const name &owner)
