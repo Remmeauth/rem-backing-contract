@@ -4,21 +4,34 @@ namespace eosio {
 
    backing::backing(name receiver, name code,  datastream<const char*> ds)
    :contract(receiver, code, ds),
-    rewards_dist_tbl(get_self(), get_self().value)
+    rewards_dist_tbl(get_self(), get_self().value),
+    voters(system_account, system_account.value),
+    global(system_account, system_account.value)
     {
       rewards_dist = rewards_dist_tbl.exists() ? rewards_dist_tbl.get() : rewarddist{};
+      global_data = global.get();
     }
 
    void backing::distrewards()
    {
       claim_rewards( get_self() );
       asset contract_balance = get_balance(token_account, get_self(), core_symbol);
-      check_rewards_dist_sum();
+      check(contract_balance.amount >= 1'0000, "contract balance should be at least 1.0000 REM");
+      double total_accounts_stake = get_total_accounts_stake();
+      check_share_sum(total_accounts_stake);
 
-      for (const auto &guardian: rewards_dist.reward_distribution) {
-         asset quantity = { static_cast<int64_t>(contract_balance.amount * guardian.second), core_symbol };
-         if (quantity.amount > 1) {    // 0.0001 REM
-            delegatebw(get_self(), guardian.first, quantity, true);
+      for (const auto &account: rewards_dist.reward_index) {
+         asset account_balance = get_balance(token_account, account.first, core_symbol);
+         bool is_guardian = check_is_guardian(account.first);
+
+         if (is_guardian) {
+            double account_share = (account_balance.amount * account.second) / total_accounts_stake;
+            asset quantity = {static_cast<int64_t>(account_share * 1'0000), core_symbol };
+            if (quantity.amount >= 1) {    // 0.0001 REM
+               delegatebw(get_self(), account.first, quantity, true);
+            }
+         } else {
+            total_accounts_stake -= account_balance.amount * account.second;
          }
       }
    }
@@ -28,9 +41,10 @@ namespace eosio {
       require_auth( get_self() );
 
       for (size_t i = 0; i < accounts.size(); ++i) {
-         rewards_dist.reward_distribution[accounts.at(i)] = reward_pct.at(i);
+         rewards_dist.reward_index[accounts.at(i)] = reward_pct.at(i);
       }
-      check_rewards_dist_sum();
+      double total_accounts_stake = get_total_accounts_stake();
+      check_share_sum(total_accounts_stake);
       rewards_dist_tbl.set(rewards_dist, get_self());
    }
 
@@ -38,20 +52,39 @@ namespace eosio {
    {
       require_auth( get_self() );
 
-      auto it = rewards_dist.reward_distribution.find(account);
-      check(it != rewards_dist.reward_distribution.end(), "account not found");
+      auto it = rewards_dist.reward_index.find(account);
+      check(it != rewards_dist.reward_index.end(), "account not found");
 
-      rewards_dist.reward_distribution.erase(account);
+      rewards_dist.reward_index.erase(account);
       rewards_dist_tbl.set(rewards_dist, same_payer);
    }
 
-   void backing::check_rewards_dist_sum() {
-      const auto dist_sum = std::accumulate(
-         std::begin(rewards_dist.reward_distribution), std::end(rewards_dist.reward_distribution), 0.0,
-                    [](const auto previous, const auto& element)
-                    { return previous + element.second; }
-      );
-      check(dist_sum >= 0.9999 && dist_sum <= 1.0001, "the sum of the reward distribution should be a 1(+-0.0001");
+   double backing::get_total_accounts_stake() {
+      double total_accounts_stake = 0;
+      for (const auto &account: rewards_dist.reward_index) {
+         asset account_balance = get_balance(token_account, account.first, core_symbol);
+         total_accounts_stake += account_balance.amount * account.second;
+      }
+      return total_accounts_stake;
+   }
+
+   void backing::check_share_sum(const double &total_accounts_stake) {
+      double share = 0;
+      for (const auto &account: rewards_dist.reward_index) {
+         asset account_balance = get_balance(token_account, account.first, core_symbol);
+         share += (account_balance.amount * account.second) / total_accounts_stake;
+      }
+      check(share >= 0.9999 && share <= 1.0001, "the sum of the share proportion should be a 1(+-0.0001");
+   }
+
+   bool backing::check_is_guardian(const name &account) {
+      const auto vit = voters.find(account.value);
+      const auto ct = current_time_point();
+
+      if (vit != voters.end() && vit->staked >= global_data.guardian_stake_threshold && ct - vit->last_reassertion_time <= global_data.producer_inactivity_punishment_period) {
+         return true;
+      }
+      return false;
    }
 
    void backing::claim_rewards(const name &owner)
