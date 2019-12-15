@@ -8,10 +8,10 @@
 
 namespace eosio {
 
-   class [[eosio::contract("rem.backing")]] backing : public contract {
+   class [[eosio::contract("rem.bonus")]] bonus : public contract {
    public:
 
-      backing(name receiver, name code,  datastream<const char*> ds);
+      bonus(name receiver, name code,  datastream<const char*> ds);
 
       /**
        * Distribute rewards action.
@@ -55,14 +55,14 @@ namespace eosio {
           return ac.balance;
       }
 
-      using create_action = action_wrapper<"distrewards"_n, &backing::distrewards>;
+      using create_action = action_wrapper<"distrewards"_n, &bonus::distrewards>;
    private:
       static constexpr name     system_account       = "rem"_n;
       static constexpr name     token_account        = "rem.token"_n;
       static constexpr symbol   core_symbol          = symbol(symbol_code("REM"), 4);
       static constexpr uint32_t min_contract_balance = 1'0000;
 
-      struct [[eosio::table, eosio::contract("rem.backing")]] rewards {
+      struct [[eosio::table, eosio::contract("rem.bonus")]] rewards {
          std::map<name, double> distribution;
 
          // explicit serialization macro is not necessary, used here only to improve compilation time
