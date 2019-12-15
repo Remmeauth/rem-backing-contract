@@ -1,8 +1,8 @@
-#include <rem.backing.hpp>
+#include <rem.bonus.hpp>
 
 namespace eosio {
 
-   backing::backing(name receiver, name code,  datastream<const char*> ds)
+   bonus::bonus(name receiver, name code,  datastream<const char*> ds)
    :contract(receiver, code, ds),
     rewards_tbl(get_self(), get_self().value),
     voters(system_account, system_account.value),
@@ -12,7 +12,7 @@ namespace eosio {
       global_data = global.get();
     }
 
-   void backing::distrewards()
+   void bonus::distrewards()
    {
       claim_rewards( get_self() );
       asset contract_balance = get_balance(token_account, get_self(), core_symbol);
@@ -26,7 +26,6 @@ namespace eosio {
          int64_t account_stake = vit != voters.end() ? vit->staked : 0;
 
          double account_share = (account_stake * account.second) / total_accounts_stake;
-         print(contract_balance.amount * account_share);
          asset quantity = { static_cast<int64_t>(contract_balance.amount * account_share), core_symbol };
          if (is_guardian(account.first) && quantity.amount >= 1) {    // 0.0001 REM
             delegatebw(get_self(), account.first, quantity, true);
@@ -34,7 +33,7 @@ namespace eosio {
       }
    }
 
-   void backing::addaccounts(const std::vector<name> &accounts, const std::vector<double> &reward_index)
+   void bonus::addaccounts(const std::vector<name> &accounts, const std::vector<double> &reward_index)
    {
       require_auth( get_self() );
 
@@ -46,7 +45,7 @@ namespace eosio {
       rewards_tbl.set(rewards_info, get_self());
    }
 
-   void backing::removeacc(const name &account)
+   void bonus::removeacc(const name &account)
    {
       require_auth( get_self() );
 
@@ -57,7 +56,7 @@ namespace eosio {
       rewards_tbl.set(rewards_info, same_payer);
    }
 
-   double backing::get_total_accounts_stake() {
+   double bonus::get_total_accounts_stake() {
       double total_accounts_stake = 0;
       for (const auto &account: rewards_info.distribution) {
          const auto vit = voters.find(account.first.value);
@@ -68,7 +67,7 @@ namespace eosio {
       return total_accounts_stake;
    }
 
-   void backing::check_share_sum(const double &total_accounts_stake) {
+   void bonus::check_share_sum(const double &total_accounts_stake) {
       double share = 0;
       for (const auto &account: rewards_info.distribution) {
          const auto vit = voters.find(account.first.value);
@@ -79,7 +78,7 @@ namespace eosio {
       check(share >= 0.9999 && share <= 1.0001, "the sum of the share proportion should be a 1(+-0.0001");
    }
 
-   bool backing::is_guardian(const name &account) {
+   bool bonus::is_guardian(const name &account) {
       const auto vit = voters.find(account.value);
       int64_t account_stake = vit != voters.end() ? vit->staked : 0;
       const auto ct = current_time_point();
@@ -90,7 +89,7 @@ namespace eosio {
       return false;
    }
 
-   void backing::claim_rewards(const name &owner)
+   void bonus::claim_rewards(const name &owner)
    {
       action(
          permission_level{owner, "active"_n},
@@ -99,7 +98,7 @@ namespace eosio {
       ).send();
    }
 
-   void backing::delegatebw(const name& from, const name& receiver, const asset& stake_quantity, bool transfer)
+   void bonus::delegatebw(const name& from, const name& receiver, const asset& stake_quantity, bool transfer)
    {
       action(
          permission_level{from, "active"_n},
@@ -109,4 +108,4 @@ namespace eosio {
    }
 } /// namespace eosio
 
-EOSIO_DISPATCH( eosio::backing, (distrewards)(addaccounts)(removeacc) )
+EOSIO_DISPATCH( eosio::bonus, (distrewards)(addaccounts)(removeacc) )
