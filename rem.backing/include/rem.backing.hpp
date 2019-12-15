@@ -22,13 +22,13 @@ namespace eosio {
       void distrewards();
 
       /**
-       * Set the accounts to which rewards will be distributed.
+       * Add the accounts to which rewards will be distributed.
        *
        * @param accounts - the accounts to which rewards will be distributed,
-       * @param reward_pct - the account for which the token balance is returned.
+       * @param reward_index - the reward index of a receiving account.
        */
       [[eosio::action]]
-      void setaccounts(const std::vector<name> &accounts, const std::vector<double> &reward_pct);
+      void addaccounts(const std::vector<name> &accounts, const std::vector<double> &reward_index);
 
       /**
        * Remove account from the rewards distribution list.
@@ -57,15 +57,16 @@ namespace eosio {
 
       using create_action = action_wrapper<"distrewards"_n, &backing::distrewards>;
    private:
-      static constexpr name   system_account = "rem"_n;
-      static constexpr name   token_account  = "rem.token"_n;
-      static constexpr symbol core_symbol    = symbol(symbol_code("REM"), 4);
+      static constexpr name     system_account       = "rem"_n;
+      static constexpr name     token_account        = "rem.token"_n;
+      static constexpr symbol   core_symbol          = symbol(symbol_code("REM"), 4);
+      static constexpr uint32_t min_contract_balance = 1'0000;
 
-      struct [[eosio::table]] rewarddist {
-         std::map<name, double> reward_index;
+      struct [[eosio::table, eosio::contract("rem.backing")]] rewards {
+         std::map<name, double> distribution;
 
          // explicit serialization macro is not necessary, used here only to improve compilation time
-         EOSLIB_SERIALIZE( rewarddist, (reward_index))
+         EOSLIB_SERIALIZE( rewards, (distribution))
       };
 
       struct [[eosio::table]] account {
@@ -161,7 +162,7 @@ namespace eosio {
       };
 
       typedef eosio::multi_index< "accounts"_n,  account >  accounts;
-      typedef singleton< "rewarddist"_n,  rewarddist >      rewards_idx;
+      typedef singleton< "rewards"_n,  rewards >            rewards_idx;
       /**
        * Voters table
        *
@@ -172,8 +173,8 @@ namespace eosio {
                                 > voters_table;
       typedef eosio::singleton< "globalrem"_n, eosio_global_rem_state > global_rem_state_singleton;
 
-      rewards_idx                 rewards_dist_tbl;
-      rewarddist                  rewards_dist;
+      rewards_idx                 rewards_tbl;
+      rewards                     rewards_info;
       voters_table                voters;
       global_rem_state_singleton  global;
       eosio_global_rem_state      global_data;
@@ -181,7 +182,7 @@ namespace eosio {
       double get_total_accounts_stake();
 
       void check_share_sum(const double &total_accounts_stake);
-      bool check_is_guardian(const name &account);
+      bool is_guardian(const name &account);
 
       void claim_rewards(const name &owner);
       void delegatebw(const name& from, const name& receiver, const asset& stake_quantity, bool transfer);
