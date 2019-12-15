@@ -22,13 +22,13 @@ Can be called once a day.
 $ remcli push action rembacking distrewards '[]' -p accountnum1
 ```
 
-### setaccounts
+### addaccounts
 
-Set the accounts to which rewards will be distributed.
+Add the accounts to which rewards will be distributed.
 It can only be called by the owner of the contract.
 
 ```bash
-$ remcli push action rembacking setaccounts '[["accountnum1", "accountnum2"], ["0.5", "0.5"]]' -p rembacking 
+$ remcli push action rembacking addaccounts '[["accountnum1", "accountnum2"], ["0.5", "0.5"]]' -p rembacking 
 ```
 
 ### removeacc
