@@ -153,14 +153,13 @@ namespace eosio {
          microseconds stake_lock_period   = eosio::days(180);
          microseconds stake_unlock_period = eosio::days(180);
 
-         microseconds reassertion_period = eosio::days( 7 );
+         microseconds reassertion_period = eosio::days( 30 );
 
          EOSLIB_SERIALIZE( eosio_global_rem_state, (per_stake_share)(per_vote_share)
             (gifter_attr_contract)(gifter_attr_issuer)(gifter_attr_name)
             (guardian_stake_threshold)(producer_max_inactivity_time)(producer_inactivity_punishment_period)
             (stake_lock_period)(stake_unlock_period)(reassertion_period) )
       };
-
       typedef eosio::multi_index< "accounts"_n,  account >  accounts;
       typedef singleton< "rewards"_n,  rewards >            rewards_idx;
       /**
@@ -181,7 +180,6 @@ namespace eosio {
 
       double get_total_accounts_stake();
 
-      void check_share_sum(const double &total_accounts_stake);
       bool is_guardian(const name &account);
 
       void claim_rewards(const name &owner);

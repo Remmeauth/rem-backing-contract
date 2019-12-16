@@ -19,7 +19,6 @@ namespace eosio {
       check(contract_balance.amount >= min_contract_balance, "the balance of the contract should contain a minimum amount for distribution");
 
       double total_accounts_stake = get_total_accounts_stake();
-      check_share_sum(total_accounts_stake);
 
       for (const auto &account: rewards_info.distribution) {
          const auto vit = voters.find(account.first.value);
@@ -38,10 +37,9 @@ namespace eosio {
       require_auth( get_self() );
 
       for (size_t i = 0; i < accounts.size(); ++i) {
+         check(reward_index.at(i) >= 1 && reward_index.at(i) <= 1.5, "reward index should be between 1 and 1.5");
          rewards_info.distribution[accounts.at(i)] = reward_index.at(i);
       }
-      double total_accounts_stake = get_total_accounts_stake();
-      check_share_sum(total_accounts_stake);
       rewards_tbl.set(rewards_info, get_self());
    }
 
@@ -67,23 +65,12 @@ namespace eosio {
       return total_accounts_stake;
    }
 
-   void bonus::check_share_sum(const double &total_accounts_stake) {
-      double share = 0;
-      for (const auto &account: rewards_info.distribution) {
-         const auto vit = voters.find(account.first.value);
-         int64_t account_stake = vit != voters.end() ? vit->staked : 0;
-         if (is_guardian(account.first))
-            share += (account_stake * account.second) / total_accounts_stake;
-      }
-      check(share >= 0.9999 && share <= 1.0001, "the sum of the share proportion should be a 1(+-0.0001");
-   }
-
    bool bonus::is_guardian(const name &account) {
       const auto vit = voters.find(account.value);
       int64_t account_stake = vit != voters.end() ? vit->staked : 0;
       const auto ct = current_time_point();
 
-      if (account_stake >= global_data.guardian_stake_threshold && ct - vit->last_reassertion_time <= global_data.producer_inactivity_punishment_period) {
+      if (account_stake >= global_data.guardian_stake_threshold && ct - vit->last_reassertion_time <= global_data.reassertion_period) {
          return true;
       }
       return false;
