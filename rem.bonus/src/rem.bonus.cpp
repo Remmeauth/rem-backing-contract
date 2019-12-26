@@ -14,7 +14,6 @@ namespace eosio {
 
    void bonus::distrewards()
    {
-      claim_rewards( get_self() );
       asset contract_balance = get_balance(token_account, get_self(), core_symbol);
       check(contract_balance.amount >= min_contract_balance, "the balance of the contract should contain a minimum amount for distribution");
 
@@ -76,12 +75,12 @@ namespace eosio {
       return false;
    }
 
-   void bonus::claim_rewards(const name &owner)
+   void bonus::claimrewards()
    {
       action(
-         permission_level{owner, "active"_n},
+         permission_level{get_self(), "active"_n},
          system_account, "claimrewards"_n,
-         std::make_tuple(owner)
+         std::make_tuple(get_self())
       ).send();
    }
 
@@ -95,4 +94,4 @@ namespace eosio {
    }
 } /// namespace eosio
 
-EOSIO_DISPATCH( eosio::bonus, (distrewards)(addaccounts)(removeacc) )
+EOSIO_DISPATCH( eosio::bonus, (distrewards)(claimrewards)(addaccounts)(removeacc) )

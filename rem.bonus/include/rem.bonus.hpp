@@ -22,6 +22,14 @@ namespace eosio {
       void distrewards();
 
       /**
+       * Claim rewards action.
+       *
+       * @details Claim rewards of the rem.bonus contract.
+       */
+      [[eosio::action]]
+      void claimrewards();
+
+      /**
        * Add the accounts to which rewards will be distributed.
        *
        * @param accounts - the accounts to which rewards will be distributed,
