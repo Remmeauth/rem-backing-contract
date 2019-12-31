@@ -10,8 +10,11 @@ namespace eosio {
 
    class [[eosio::contract("rem.bonus")]] bonus : public contract {
    public:
-
-      bonus(name receiver, name code,  datastream<const char*> ds);
+      bonus(name receiver, name code,  datastream<const char*> ds)
+         :contract(receiver, code, ds),
+          rewards_tbl(get_self(), get_self().value),
+          voters(system_account, system_account.value),
+          global(system_account, system_account.value) {}
 
       /**
        * Distribute rewards action.
@@ -71,10 +74,13 @@ namespace eosio {
       static constexpr uint32_t min_contract_balance = 1'0000;
 
       struct [[eosio::table, eosio::contract("rem.bonus")]] rewards {
-         std::map<name, double> distribution;
+         name     account;
+         double   reward_index;
+         bool     is_distribute_today;
 
+         uint64_t primary_key() const { return account.value; }
          // explicit serialization macro is not necessary, used here only to improve compilation time
-         EOSLIB_SERIALIZE( rewards, (distribution))
+         EOSLIB_SERIALIZE( rewards, (account)(reward_index)(is_distribute_today) )
       };
 
       struct [[eosio::table]] account {
@@ -169,7 +175,7 @@ namespace eosio {
             (stake_lock_period)(stake_unlock_period)(reassertion_period) )
       };
       typedef eosio::multi_index< "accounts"_n,  account >  accounts;
-      typedef singleton< "rewards"_n,  rewards >            rewards_idx;
+      typedef eosio::multi_index< "rewards"_n,   rewards >  rewards_idx;
       /**
        * Voters table
        *
@@ -184,7 +190,6 @@ namespace eosio {
       rewards                     rewards_info;
       voters_table                voters;
       global_rem_state_singleton  global;
-      eosio_global_rem_state      global_data;
 
       double get_total_accounts_stake();
 
