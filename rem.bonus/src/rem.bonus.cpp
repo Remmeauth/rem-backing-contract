@@ -5,7 +5,7 @@ namespace eosio {
    void bonus::distrewards()
    {
       asset contract_balance = get_balance(token_account, get_self(), core_symbol);
-      check(contract_balance.amount >= min_contract_balance, "the balance of the contract should contain a minimum amount for distribution");
+      check(contract_balance.amount >= min_contract_balance, "the balance of the contract should contain a minimum the amount for distribution");
 
       double total_accounts_stake = get_total_accounts_stake();
       const uint8_t max_dist_depth = 10;
@@ -40,7 +40,7 @@ namespace eosio {
             rewards_tbl.emplace(get_self(), [&](auto &s) {
                s.account = accounts.at(i);
                s.reward_index = reward_index.at(i);
-               s.is_distribute_today = false;
+               s.is_distribute_today = true;
             });
          } else {
             rewards_tbl.modify(*it, get_self(), [&](auto &s) {
@@ -80,9 +80,7 @@ namespace eosio {
       for (auto table_it = rewards_tbl.begin(); table_it != rewards_tbl.end(); ++table_it) {
          if (!table_it->is_distribute_today && is_guardian(table_it->account)) {
             const auto vit = voters.find(table_it->account.value);
-            int64_t account_stake = vit != voters.end() ? vit->staked : 0;
-
-            total_accounts_stake += account_stake * table_it->reward_index;
+            total_accounts_stake += vit->staked * table_it->reward_index;
          }
       }
       return total_accounts_stake;
